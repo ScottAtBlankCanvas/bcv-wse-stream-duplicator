@@ -1,4 +1,4 @@
-package com.blankcanvas.video.stream.multi.duplicator;
+package com.blankcanvas.video.stream.duplicator;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -140,7 +140,7 @@ public class DuplicateGroup {
 		for (int i = 0; i < this.numberDuplicates; i++) {
 			String targetStreamName = createDuplicateStreamName(ingestStreamName, i);
 
-			this.logger.warn(String.format("Loopback stream: '%s/%s' --> '%s/%s'", this.appName, ingestStreamName, this.targetAppName, targetStreamName));
+			this.logger.warn(String.format("%s: Duplicating stream: '%s/%s' --> '%s/%s'", ModuleStreamDuplicator.MODULE_NAME, this.appName, ingestStreamName, this.targetAppName, targetStreamName));
 			success = startPublisher(ingestStreamName, targetStreamName);
 			if (! success) return success;
 		}
@@ -158,6 +158,7 @@ public class DuplicateGroup {
 
 		try {
 			Publisher publisher = Publisher.createInstance(appInstance.getVHost(), targetAppName, IApplicationInstance.DEFAULT_APPINSTANCE_NAME);
+			this.publishers.put(dstStreamName, publisher);
 
 			if (publisher == null)
 				return false;
@@ -167,7 +168,6 @@ public class DuplicateGroup {
 
 			publisher.publish(dstStreamName);
 
-			this.publishers.put(dstStreamName, publisher);
 			return true;
 
 		} catch (Exception e) {

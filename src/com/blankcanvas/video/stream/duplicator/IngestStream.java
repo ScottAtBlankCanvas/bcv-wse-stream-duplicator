@@ -1,4 +1,4 @@
-package com.blankcanvas.video.stream.multi.duplicator;
+package com.blankcanvas.video.stream.duplicator;
 
 import com.wowza.wms.stream.*;
 

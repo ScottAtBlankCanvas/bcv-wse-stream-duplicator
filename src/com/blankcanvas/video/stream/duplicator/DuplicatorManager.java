@@ -1,4 +1,4 @@
-package com.blankcanvas.video.stream.multi.duplicator;
+package com.blankcanvas.video.stream.duplicator;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -39,13 +39,6 @@ public class DuplicatorManager {
 
 
 
-	//
-	//
-	// ********		WSE callbacks
-	//
-	//
-
-
 	private synchronized ExecutorService getExecutorService(String streamName) {
 		ExecutorService ret = null;
 
@@ -62,6 +55,13 @@ public class DuplicatorManager {
 		
 		return ret;
 	}
+
+	
+	//
+	//
+	// ********		WSE callbacks
+	//
+	//
 
 
 	public void onMetaData(IMediaStream stream, AMFPacket packet) {
@@ -84,30 +84,28 @@ public class DuplicatorManager {
 		// Publish creates a single threaded Executor service for its renditions
 		// which the other callbacks will use
 		
-		logger.info(">onPublish:" + streamName);
-		if (streamName.startsWith("copy_")) {
-			logger.info("- onPublish: Already duplicated, ignoring: " + streamName);
+		//logger.info(">onPublish:" + streamName);
+		if (isDuplicateStream(streamName)) {
+			//logger.info("- onPublish: Already duplicated, ignoring: " + streamName);
 			return;
 		}
 
 
 		DuplicateGroup duplicatedStream = new DuplicateGroup(appInstance, stream, streamName);
-		logger.info("-OnPublishRunnable: 4");
 		
 		addDuplicatedIngestStream(duplicatedStream);
 		
 		// Start the push
 		if (! duplicatedStream.startDuplication()) {
+			// failure, so clean up
 			IngestStream ingestStream = duplicatedStream.getIngestStream();
 
-			// failure, so clean up
 			if (ingestStream != null)
 				ingestStreamsMap.remove(ingestStream.getName());
 		}
 
 		
-	logger.info("<onPublish:" + streamName);
-
+		//logger.info("<onPublish:" + streamName);
 	}
 
 	public void onUnPublish(IMediaStream stream, String streamName) {
@@ -180,14 +178,14 @@ public class DuplicatorManager {
 			this.streamName = streamName;
 		}
 		public void run() {
-			logger.info(">OnUnPublishRunnable:" + streamName);
+			//logger.info(">OnUnPublishRunnable:" + streamName);
 			
 			DuplicateGroup dupStreamInfo = getDuplicatedStreamInfoBySource(streamName);
 			if (dupStreamInfo != null) {
 				stopDuplication(dupStreamInfo);
 			}
 
-			logger.info("<OnUnPublishRunnable:" + streamName);
+			//logger.info("<OnUnPublishRunnable:" + streamName);
 		}
 		
 	}
