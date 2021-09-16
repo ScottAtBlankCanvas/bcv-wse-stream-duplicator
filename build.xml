@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<project name="BlankCanvasVideoStreamDuplicator" default="jar" basedir=".">
+
+	<property name="wowza.lib.dir" value="/Library/WowzaStreamingEngine/lib"/>
+	<property name="jar.filename" value="blankcanvas-video-wse-stream-duplicator.jar"/>
+	<property name="core.build.dir" value="bin"/>
+
+	<path id="wowza-classpath">
+		<fileset dir="${wowza.lib.dir}">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+
+
+	<target name="jar">
+		<mkdir dir="build/classes"/>
+		<javac target="1.8" source="1.8" srcdir="src" destdir="build/classes" debug="false" >
+			<classpath refid="wowza-classpath"/>
+		</javac>
+
+		<jar basedir="build/classes" jarfile="build/${jar.filename}">
+		</jar>
+	</target>
+
+</project>
