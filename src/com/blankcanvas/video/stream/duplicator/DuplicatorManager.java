@@ -62,22 +62,6 @@ public class DuplicatorManager {
 	// ********		WSE callbacks
 	//
 	//
-
-
-	public void onMetaData(IMediaStream stream, AMFPacket packet) {
-		onLivePacket(stream, packet);		
-	}
-
-	public void onLivePacket(IMediaStream stream, AMFPacket packet) {
-		String streamName = stream.getName();
-		
-		ExecutorService executor = getExecutorService(streamName);
-		
-		OnLivePacketRunnable runnable = new OnLivePacketRunnable(streamName, packet);
-		executor.execute(runnable);
-
-	}
-
 	public void onPublish(IMediaStream stream, String streamName) {
 		// do not kick this into a different thread because:
 		// We need to ensure the order of execution to completion: publish before codecs
@@ -91,7 +75,7 @@ public class DuplicatorManager {
 		}
 
 
-		DuplicateGroup duplicatedStream = new DuplicateGroup(appInstance, stream, streamName);
+		DuplicateGroup duplicatedStream = new DuplicateGroup(this, appInstance, stream, streamName);
 		
 		addDuplicatedIngestStream(duplicatedStream);
 		
@@ -106,6 +90,22 @@ public class DuplicatorManager {
 
 		
 		//logger.info("<onPublish:" + streamName);
+	}
+
+
+
+	public void onMetaData(IMediaStream stream, AMFPacket packet) {
+		onLivePacket(stream, packet);		
+	}
+
+	public void onLivePacket(IMediaStream stream, AMFPacket packet) {
+		String streamName = stream.getName();
+		
+		ExecutorService executor = getExecutorService(streamName);
+		
+		OnLivePacketRunnable runnable = new OnLivePacketRunnable(streamName, packet);
+		executor.execute(runnable);
+
 	}
 
 	public void onUnPublish(IMediaStream stream, String streamName) {

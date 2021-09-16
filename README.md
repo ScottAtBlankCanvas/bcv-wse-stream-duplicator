@@ -24,6 +24,11 @@ Application.xml/Properties:
 	<Type>Integer</Type>
 </Property>
 <Property>
+	<Name>com.blankcanvas.video.stream.duplicator/duplicatePattern</Name>
+	<Value>${com.wowza.wms.context.StreamName}_${DuplicateCount}</Value>
+</Property>
+
+<Property>
 	<Name>com.blankcanvas.video.stream.duplicator/debug</Name>
 	<Value>false</Value>
 	<Type>Boolean</Type>

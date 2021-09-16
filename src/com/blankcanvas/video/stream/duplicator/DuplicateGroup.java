@@ -3,6 +3,7 @@ package com.blankcanvas.video.stream.duplicator;
 import java.util.*;
 import java.util.concurrent.*;
 
+import com.wowza.util.*;
 import com.wowza.wms.amf.*;
 import com.wowza.wms.application.*;
 import com.wowza.wms.logging.*;
@@ -14,6 +15,7 @@ import com.wowza.wms.vhost.*;
 public class DuplicateGroup {
 	private Map<String, Publisher> publishers = new ConcurrentHashMap<String, Publisher>();
 
+	private DuplicatorManager manager;
 	private IApplicationInstance appInstance;
 	private String appName;
 	
@@ -29,9 +31,13 @@ public class DuplicateGroup {
 	private boolean debug = false;
 	private int numberDuplicates = 1;
 	private String targetAppName = null;
+	private String duplicatePattern = "${com.wowza.wms.context.StreamName}_${DuplicateCount}";
 
 
-	public DuplicateGroup(IApplicationInstance appInst, IMediaStream stream, String streamName) {
+
+
+	public DuplicateGroup(DuplicatorManager manager, IApplicationInstance appInst, IMediaStream stream, String streamName) {
+		this.manager = manager;
 		this.appInstance = appInst;
 		this.appName = appInstance.getApplication().getName();
 		this.ingestStream  = new IngestStream(stream, streamName);
@@ -43,6 +49,7 @@ public class DuplicateGroup {
 		this.debug = props.getPropertyBoolean(DuplicatorConstants.PROP_DEBUG, debug);
 		this.numberDuplicates = props.getPropertyInt(DuplicatorConstants.PROP_NUMBER_DUPS, this.numberDuplicates);
 		this.targetAppName  = props.getPropertyStr(DuplicatorConstants.PROP_TARGET_APP, this.appInstance.getApplication().getName());
+		this.duplicatePattern = props.getPropertyStr(DuplicatorConstants.PROP_DUPLICATE_PATTERN, this.duplicatePattern);
 	}
 
 
@@ -139,8 +146,13 @@ public class DuplicateGroup {
 		
 		for (int i = 0; i < this.numberDuplicates; i++) {
 			String targetStreamName = createDuplicateStreamName(ingestStreamName, i);
+			if (this.manager.doesIngestStreamExist(targetStreamName) ||
+				this.manager.isDuplicateStream(targetStreamName)) {
+				this.logger.warn(String.format("%s: Attempting to duplicate '%s/%s' but stream '%s/%s' already exists.  Skipping", ModuleStreamDuplicator.MODULE_NAME, this.appName, ingestStreamName, this.targetAppName, targetStreamName));
+				continue;				
+			}
 
-			this.logger.warn(String.format("%s: Duplicating stream: '%s/%s' --> '%s/%s'", ModuleStreamDuplicator.MODULE_NAME, this.appName, ingestStreamName, this.targetAppName, targetStreamName));
+			this.logger.info(String.format("%s: Duplicating stream: '%s/%s' --> '%s/%s'", ModuleStreamDuplicator.MODULE_NAME, this.appName, ingestStreamName, this.targetAppName, targetStreamName));
 			success = startPublisher(ingestStreamName, targetStreamName);
 			if (! success) return success;
 		}
@@ -149,8 +161,16 @@ public class DuplicateGroup {
 	}
 
 	private String createDuplicateStreamName(String ingestStreamName, int i) {
-		return ingestStreamName + "_"+(i+1);
+		Map<String, String> envMap = new HashMap<String, String>();
+		envMap.put("com.wowza.wms.context.VHost", appInstance.getVHost().getName());
+		envMap.put("com.wowza.wms.context.Application", appName);
+		envMap.put("com.wowza.wms.context.ApplicationInstance", appInstance.getName());
+		envMap.put("com.wowza.wms.context.StreamName", ingestStreamName);
+		envMap.put("DuplicateCount", ""+i);
 
+		String ret =  SystemUtils.expandEnvironmentVariables(this.duplicatePattern, envMap);
+
+		return ret;
 	}
 
 
