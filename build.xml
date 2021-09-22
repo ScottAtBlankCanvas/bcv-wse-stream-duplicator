@@ -14,7 +14,7 @@
 
 	<target name="jar">
 		<mkdir dir="build/classes"/>
-		<javac target="1.8" source="1.8" srcdir="src" destdir="build/classes" debug="false" >
+		<javac target="1.8" source="1.8" srcdir="src" destdir="build/classes" debug="true" >
 			<classpath refid="wowza-classpath"/>
 		</javac>
 
@@ -22,4 +22,9 @@
 		</jar>
 	</target>
 
+	<target name="clean">
+		<delete dir="build/classes" />
+		<delete file="build/${jar.filename}" />
+	</target>
+	
 </project>
