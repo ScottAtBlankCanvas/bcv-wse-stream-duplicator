@@ -166,7 +166,7 @@ public class DuplicateGroup {
 		envMap.put("com.wowza.wms.context.Application", appName);
 		envMap.put("com.wowza.wms.context.ApplicationInstance", appInstance.getName());
 		envMap.put("com.wowza.wms.context.StreamName", ingestStreamName);
-		envMap.put("DuplicateCount", ""+i);
+		envMap.put("DuplicateCount", String.format("%03d", i));
 
 		String ret =  SystemUtils.expandEnvironmentVariables(this.duplicatePattern, envMap);
 
